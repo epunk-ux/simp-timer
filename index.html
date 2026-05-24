@@ -255,6 +255,25 @@
   let wakeLock = null;
 
   const ALARM_MS = 15_000;
+  const STORAGE_KEY = 'simp-timer:last';
+
+  const saveLast = () => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        m: parseInt(minEl.value, 10) || 0,
+        s: parseInt(secEl.value, 10) || 0,
+      }));
+    } catch (_) {}
+  };
+  const restoreLast = () => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const { m, s } = JSON.parse(raw);
+      if (Number.isFinite(m)) minEl.value = Math.max(0, Math.min(999, m));
+      if (Number.isFinite(s)) secEl.value = Math.max(0, Math.min(59, s));
+    } catch (_) {}
+  };
 
   // --- Time helpers ---
   const fmt = (ms) => {
@@ -438,6 +457,7 @@
         status.textContent = 'Set a time first';
         return;
       }
+      saveLast();
       await ensureAudio();
       await acquireWakeLock();
       enterCounting();
@@ -447,6 +467,7 @@
     }
   });
 
+  restoreLast();
   renderIdle();
 })();
 </script>
