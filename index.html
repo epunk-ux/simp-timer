@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0b0d10" />
+<title>Simp Timer</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" type="image/png" sizes="64x64" href="icons/favicon.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Simp Timer" />
+<style>
+  :root {
+    --bg: #0b0d10;
+    --panel: #15191f;
+    --panel-2: #1c2129;
+    --text: #e8edf2;
+    --muted: #8a94a3;
+    --accent: #4cd9a4;
+    --accent-press: #34b687;
+    --danger: #ff5d6c;
+    --danger-press: #d94252;
+    --alarm: #ffb020;
+    --border: #2a3140;
+    --radius: 18px;
+    --tap: 72px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+    overscroll-behavior: contain;
+  }
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: max(env(safe-area-inset-top), 16px) 16px max(env(safe-area-inset-bottom), 16px);
+    gap: 20px;
+  }
+  h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .display {
+    width: 100%;
+    max-width: 520px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px 16px;
+    text-align: center;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .display.alarming {
+    background: var(--alarm);
+    border-color: var(--alarm);
+    animation: pulse 0.5s ease-in-out infinite alternate;
+  }
+  @keyframes pulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.02); }
+  }
+  .clock {
+    font-size: clamp(72px, 22vw, 144px);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .display.alarming .clock { color: #1a1206; }
+  .status {
+    margin-top: 12px;
+    font-size: 14px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    min-height: 1.2em;
+  }
+  .display.alarming .status { color: #1a1206; font-weight: 700; }
+  .inputs {
+    width: 100%;
+    max-width: 520px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .field {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .field label {
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .stepper {
+    display: grid;
+    grid-template-columns: var(--tap) 1fr var(--tap);
+    align-items: center;
+    gap: 8px;
+  }
+  .stepper button {
+    height: var(--tap);
+    border: 1px solid var(--border);
+    background: var(--panel-2);
+    color: var(--text);
+    border-radius: 14px;
+    font-size: 32px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.1s, transform 0.05s;
+    touch-action: manipulation;
+  }
+  .stepper button:active { background: #2a3140; transform: scale(0.96); }
+  .stepper input {
+    height: var(--tap);
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-size: 40px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  .stepper input::-webkit-outer-spin-button,
+  .stepper input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .stepper input:focus { outline: none; }
+  .actions {
+    width: 100%;
+    max-width: 520px;
+  }
+  .btn-primary {
+    width: 100%;
+    height: 96px;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.1s, transform 0.05s;
+    touch-action: manipulation;
+    color: #0b0d10;
+  }
+  .btn-primary.start {
+    background: var(--accent);
+  }
+  .btn-primary.start:active { background: var(--accent-press); transform: scale(0.99); }
+  .btn-primary.stop {
+    background: var(--danger);
+    color: #fff;
+  }
+  .btn-primary.stop:active { background: var(--danger-press); transform: scale(0.99); }
+  .footer {
+    margin-top: auto;
+    color: var(--muted);
+    font-size: 12px;
+    text-align: center;
+    line-height: 1.5;
+    max-width: 520px;
+  }
+  .hidden { display: none !important; }
+  [disabled] { opacity: 0.4; pointer-events: none; }
+</style>
+</head>
+<body>
+  <h1>Simp Timer</h1>
+
+  <div class="display" id="display">
+    <div class="clock" id="clock">00:00</div>
+    <div class="status" id="status">Idle</div>
+  </div>
+
+  <div class="inputs" id="inputs">
+    <div class="field">
+      <label for="min">Minutes</label>
+      <div class="stepper">
+        <button type="button" data-step="min" data-delta="-1" aria-label="Decrease minutes">&minus;</button>
+        <input id="min" type="number" inputmode="numeric" pattern="[0-9]*" min="0" max="999" value="0" />
+        <button type="button" data-step="min" data-delta="1" aria-label="Increase minutes">+</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="sec">Seconds</label>
+      <div class="stepper">
+        <button type="button" data-step="sec" data-delta="-5" aria-label="Decrease seconds">&minus;</button>
+        <input id="sec" type="number" inputmode="numeric" pattern="[0-9]*" min="0" max="59" value="30" />
+        <button type="button" data-step="sec" data-delta="5" aria-label="Increase seconds">+</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button id="primary" class="btn-primary start" type="button">Start</button>
+  </div>
+
+  <div class="footer">
+    Keep this tab in the foreground &mdash; phones pause background JS.<br/>
+    First tap on Start unlocks audio.
+  </div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const clock = $('clock');
+  const status = $('status');
+  const display = $('display');
+  const primary = $('primary');
+  const inputs = $('inputs');
+  const minEl = $('min');
+  const secEl = $('sec');
+
+  // --- State ---
+  const STATE = { IDLE: 'idle', COUNTING: 'counting', ALARMING: 'alarming' };
+  let state = STATE.IDLE;
+  let totalMs = 0;          // configured duration in ms
+  let endsAt = 0;           // wall-clock target while COUNTING
+  let alarmEndsAt = 0;      // wall-clock target while ALARMING
+  let tickHandle = null;
+  let audioCtx = null;
+  let alarmNodes = null;    // { osc1, osc2, gain, lfo, lfoGain }
+  let wakeLock = null;
+
+  const ALARM_MS = 15_000;
+
+  // --- Time helpers ---
+  const fmt = (ms) => {
+    const s = Math.max(0, Math.ceil(ms / 1000));
+    const m = Math.floor(s / 60);
+    const r = s % 60;
+    return String(m).padStart(2, '0') + ':' + String(r).padStart(2, '0');
+  };
+  const readInputs = () => {
+    const m = Math.max(0, Math.min(999, parseInt(minEl.value, 10) || 0));
+    const s = Math.max(0, Math.min(59, parseInt(secEl.value, 10) || 0));
+    return (m * 60 + s) * 1000;
+  };
+  const renderIdle = () => {
+    clock.textContent = fmt(readInputs());
+  };
+
+  // --- Stepper buttons ---
+  document.querySelectorAll('button[data-step]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const which = btn.dataset.step;
+      const delta = parseInt(btn.dataset.delta, 10);
+      const el = which === 'min' ? minEl : secEl;
+      const max = which === 'min' ? 999 : 59;
+      let v = (parseInt(el.value, 10) || 0) + delta;
+      if (v < 0) v = which === 'sec' ? 55 : 0; // sec wraps for convenience; min clamps
+      if (v > max) v = which === 'sec' ? 0 : max;
+      el.value = v;
+      if (state === STATE.IDLE) renderIdle();
+    });
+  });
+  [minEl, secEl].forEach(el => {
+    el.addEventListener('input', () => { if (state === STATE.IDLE) renderIdle(); });
+    el.addEventListener('focus', () => el.select());
+  });
+
+  // --- Audio (Web Audio API) ---
+  const ensureAudio = async () => {
+    if (!audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AC();
+    }
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
+  };
+  const startAlarm = () => {
+    if (!audioCtx) return;
+    stopAlarm(); // safety
+
+    // Two alternating tones via a slow LFO on the gain — classic alarm chirp.
+    const now = audioCtx.currentTime;
+    const gain = audioCtx.createGain();
+    gain.gain.value = 0;
+    gain.connect(audioCtx.destination);
+
+    // Square-ish tones for piercing alarm character.
+    const osc1 = audioCtx.createOscillator();
+    osc1.type = 'square';
+    osc1.frequency.value = 880;
+    const osc2 = audioCtx.createOscillator();
+    osc2.type = 'square';
+    osc2.frequency.value = 660;
+
+    // Each tone is gated by its own LFO at ~4 Hz, 180deg out of phase.
+    const gateA = audioCtx.createGain();
+    gateA.gain.value = 0;
+    const gateB = audioCtx.createGain();
+    gateB.gain.value = 0;
+    osc1.connect(gateA).connect(gain);
+    osc2.connect(gateB).connect(gain);
+
+    // Pulse pattern via setValueAtTime ramp — beep ~250ms on, ~250ms off, alternating.
+    const beep = 0.25;
+    let t = now;
+    for (let i = 0; i < ALARM_MS / 1000 / beep + 2; i++) {
+      const a = (i % 2 === 0) ? gateA.gain : gateB.gain;
+      const b = (i % 2 === 0) ? gateB.gain : gateA.gain;
+      a.setValueAtTime(0.18, t);
+      b.setValueAtTime(0, t);
+      t += beep;
+    }
+    // Overall envelope: quick fade in, sustain.
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(1, now + 0.05);
+
+    osc1.start(now);
+    osc2.start(now);
+    alarmNodes = { osc1, osc2, gain, gateA, gateB };
+  };
+  const stopAlarm = () => {
+    if (!alarmNodes) return;
+    const { osc1, osc2, gain } = alarmNodes;
+    try {
+      const now = audioCtx.currentTime;
+      gain.gain.cancelScheduledValues(now);
+      gain.gain.setValueAtTime(gain.gain.value, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.05);
+      osc1.stop(now + 0.08);
+      osc2.stop(now + 0.08);
+    } catch (_) {}
+    alarmNodes = null;
+  };
+
+  // --- Wake lock (best effort) ---
+  const acquireWakeLock = async () => {
+    try {
+      if ('wakeLock' in navigator) {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeLock.addEventListener('release', () => { wakeLock = null; });
+      }
+    } catch (_) {}
+  };
+  const releaseWakeLock = async () => {
+    try { if (wakeLock) await wakeLock.release(); } catch (_) {}
+    wakeLock = null;
+  };
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && state !== STATE.IDLE && !wakeLock) {
+      acquireWakeLock();
+    }
+  });
+
+  // --- State transitions ---
+  const enterCounting = () => {
+    state = STATE.COUNTING;
+    endsAt = performance.now() + totalMs;
+    display.classList.remove('alarming');
+    status.textContent = 'Counting down';
+    primary.textContent = 'Stop';
+    primary.classList.remove('start');
+    primary.classList.add('stop');
+    inputs.setAttribute('disabled', '');
+  };
+  const enterAlarming = () => {
+    state = STATE.ALARMING;
+    alarmEndsAt = performance.now() + ALARM_MS;
+    display.classList.add('alarming');
+    status.textContent = 'Alarm';
+    startAlarm();
+  };
+  const enterIdle = () => {
+    state = STATE.IDLE;
+    if (tickHandle) { cancelAnimationFrame(tickHandle); tickHandle = null; }
+    stopAlarm();
+    display.classList.remove('alarming');
+    status.textContent = 'Idle';
+    primary.textContent = 'Start';
+    primary.classList.remove('stop');
+    primary.classList.add('start');
+    inputs.removeAttribute('disabled');
+    renderIdle();
+    releaseWakeLock();
+  };
+
+  // --- Tick loop ---
+  const tick = () => {
+    const now = performance.now();
+    if (state === STATE.COUNTING) {
+      const remaining = endsAt - now;
+      clock.textContent = fmt(remaining);
+      if (remaining <= 0) {
+        clock.textContent = '00:00';
+        enterAlarming();
+      }
+    } else if (state === STATE.ALARMING) {
+      const remaining = alarmEndsAt - now;
+      const secs = Math.max(0, Math.ceil(remaining / 1000));
+      status.textContent = 'Alarm · ' + secs + 's';
+      if (remaining <= 0) {
+        stopAlarm();
+        enterCounting(); // loop back
+      }
+    }
+    if (state !== STATE.IDLE) tickHandle = requestAnimationFrame(tick);
+  };
+
+  // --- Primary button ---
+  primary.addEventListener('click', async () => {
+    if (state === STATE.IDLE) {
+      totalMs = readInputs();
+      if (totalMs <= 0) {
+        status.textContent = 'Set a time first';
+        return;
+      }
+      await ensureAudio();
+      await acquireWakeLock();
+      enterCounting();
+      tickHandle = requestAnimationFrame(tick);
+    } else {
+      enterIdle();
+    }
+  });
+
+  renderIdle();
+})();
+</script>
+</body>
+</html>
