@@ -103,46 +103,51 @@
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 14px 16px;
+    padding: 10px 10px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
+    min-width: 0;
   }
   .field label {
-    font-size: 12px;
-    letter-spacing: 0.16em;
+    font-size: 11px;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--muted);
+    text-align: center;
   }
   .stepper {
     display: grid;
-    grid-template-columns: var(--tap) 1fr var(--tap);
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
   }
   .stepper button {
-    height: var(--tap);
+    height: 44px;
     border: 1px solid var(--border);
     background: var(--panel-2);
     color: var(--text);
-    border-radius: 14px;
-    font-size: 32px;
+    border-radius: 12px;
+    font-size: 22px;
     font-weight: 600;
     cursor: pointer;
     transition: background 0.1s, transform 0.05s;
     touch-action: manipulation;
+    padding: 0;
   }
   .stepper button:active { background: #2a3140; transform: scale(0.96); }
   .stepper input {
-    height: var(--tap);
+    height: 44px;
     width: 100%;
+    min-width: 0;
     background: transparent;
     border: none;
     color: var(--text);
-    font-size: 40px;
+    font-size: 26px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     text-align: center;
+    padding: 0;
     -moz-appearance: textfield;
     appearance: textfield;
   }
